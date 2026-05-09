@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from models import EmailPayload, AnalysisResult
-from scoring import analyze_email
+from scoring import run_signals, score_to_verdict, build_explanation
 
-
-# Creates the FastAPI backend application
 app = FastAPI(title="Malicious Email Scorer")
 
 
@@ -11,14 +9,24 @@ app = FastAPI(title="Malicious Email Scorer")
 @app.post("/analyze", response_model=AnalysisResult)
 def analyze(email: EmailPayload):
 
-    # Run the scoring engine on the incoming email
-    score, verdict, reasons = analyze_email(email)
+    # Run all scoring signals on the incoming email
+    signals = run_signals(email)
 
-    # Return the structured analysis response
+    # Calculate final score
+    score = min(sum(signal.weight for signal in signals), 100)
+
+    # Convert score to verdict
+    verdict = score_to_verdict(score)
+
+    # Build human-readable explanation
+    explanation = build_explanation(signals, score, verdict)
+
+    # Return structured analysis response
     return AnalysisResult(
         score=score,
         verdict=verdict,
-        reasons=reasons
+        signals=signals,
+        explanation=explanation
     )
 
 

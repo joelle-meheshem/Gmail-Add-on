@@ -1,333 +1,231 @@
-# MailGuard — Malicious Email Scorer
+# MailGuard – Gmail Malicious Email Scanner
 
-## Overview
+MailGuard is a Gmail Add-on that analyzes opened emails and detects suspicious or potentially malicious indicators using a rule-based security scoring engine.
 
-MailGuard is a Gmail Add-on that analyzes opened emails and produces a maliciousness score with an explainable security verdict.
+The system integrates directly into Gmail and provides:
 
-The project was designed as a lightweight phishing and malicious email detection system focused on:
+* A security verdict (`SAFE`, `SUSPICIOUS`, `MALICIOUS`)
+* A numerical risk score
+* Human-readable reasoning explaining why the email was flagged
 
-* Gmail integration
-* Explainable security analysis
-* Clean backend architecture
-* Rule-based phishing detection
-* Safe handling of untrusted email content
+The project combines:
 
-The system combines a Gmail Add-on built with Google Apps Script and a FastAPI backend service responsible for email analysis and scoring.
+* Gmail Add-ons (Google Apps Script)
+* FastAPI backend
+* Rule-based phishing detection heuristics
+* Real-time Gmail integration
 
 ---
 
 # Features
 
-## Gmail Add-on Integration
+## Gmail Integration
 
-* Runs directly inside Gmail
+* Runs directly inside Gmail as an Add-on
 * Analyzes the currently opened email
-* Displays the result as a Gmail card UI
+* Displays results in a Gmail side panel
 
-## Security Signals
+## Security Analysis Engine
 
-Implemented phishing and maliciousness heuristics include:
+The backend evaluates multiple phishing and malicious-email indicators, including:
 
 * Urgency / social-engineering language
-* Credential theft attempts
+* Credential request detection
 * URL shorteners
-* Suspicious top-level domains
+* Bare IP links
+* Suspicious TLDs
+* Free email providers
 * Lookalike / typosquatted domains
 * Brand impersonation
-* Risky attachment indicators
-* Bare IP URLs
-* Spam-like formatting
-* Suspicious HTML artifacts
+* Risky attachment references
+* Spam-style formatting
 
-## Explainable Analysis
+## Explainable Detection
 
-The add-on provides:
+Instead of returning a black-box result, MailGuard explains:
 
-* Numerical risk score
-* Final verdict
-* Triggered security signals
-* Human-readable explanation
-
-## Error Handling
-
-* Graceful backend failure handling
-* User-friendly Gmail error cards
-* Runtime exception protection
+* Why the email received its score
+* Which suspicious behaviors were detected
 
 ---
 
-# Architecture
+# Demo Screenshots
 
-```text
-Gmail Add-on (Apps Script)
-        ↓
-FastAPI Backend
-        ↓
-Scoring Engine
-        ↓
-Structured Analysis Result
-        ↓
-Rendered Gmail Card
-```
+## 🟢 Safe Email
+
+Low-risk email with minimal suspicious indicators.
+
+![Safe Email](screen/safe.png)
 
 ---
 
-# Technology Stack
+## 🟠 Suspicious Email
 
-## Frontend / Integration
+Email containing possible impersonation or suspicious content.
 
-* Google Apps Script
-* Gmail Add-on APIs
-* CardService UI
+![Suspicious Email](screen/suspicious.png)
 
-## Backend
+---
 
-* Python 3
-* FastAPI
-* Pydantic
+## 🔴 Malicious Email
 
-## Development Tools
+High-risk phishing-style email containing multiple malicious indicators.
 
-* ngrok
-* VS Code
+![Malicious Email](screen/malicious.png)
 
 ---
 
 # Project Structure
 
 ```text
-project/
+MailGuard/
 │
-├── main.py
-├── models.py
-├── scoring.py
-├── requirements.txt
-├── Code.gs
-├── appsscript.json
-└── README.md
+├── main.py            # FastAPI backend API
+├── models.py          # Pydantic request/response schemas
+├── scoring.py         # Security scoring engine and phishing heuristics
+│
+├── Code.gs            # Gmail Add-on frontend logic
+├── appsscript.json    # Gmail Add-on manifest and permissions
+│
+├── README.md
+└── assets/
+    ├── safe.png
+    ├── suspicious.png
+    └── malicious.png
 ```
 
 ---
 
-# File Responsibilities
+# Backend Architecture
 
 ## main.py
 
-API layer of the backend.
-Receives email data from Gmail, validates requests, invokes the scoring engine, and returns structured JSON responses.
+Defines the FastAPI application and exposes:
 
-Main endpoints:
-
-* POST /analyze
-* GET /health
-
----
+* `/analyze` endpoint for email analysis
+* `/health` endpoint for health checks
 
 ## models.py
 
-Defines validated request and response schemas using Pydantic.
-Ensures type safety and protects the backend from malformed input.
-
-Main models:
-
-* EmailPayload
-* SignalResult
-* AnalysisResult
-
----
+Defines all structured request and response models using Pydantic.
 
 ## scoring.py
 
-Contains the phishing detection and maliciousness scoring engine.
-Implements all rule-based security heuristics and generates:
+Contains the phishing detection engine and scoring logic.
 
-* Scores
-* Verdicts
-* Explanations
-* Triggered signals
+The engine evaluates multiple security signals and calculates:
 
----
-
-## Code.gs
-
-Implements the Gmail Add-on using Google Apps Script.
-Responsible for:
-
-* Accessing the opened Gmail message
-* Extracting email metadata
-* Calling the backend API
-* Rendering Gmail cards
-* Handling runtime/backend errors
+* Risk score
+* Verdict
+* Human-readable explanation
 
 ---
 
-## appsscript.json
+# Gmail Add-on Flow
 
-Google Apps Script manifest file.
-Defines:
-
-* OAuth permissions
-* Gmail contextual triggers
-* Add-on metadata
-* Gmail integration behavior
+```text
+Gmail Email
+     ↓
+Google Apps Script Add-on
+     ↓
+FastAPI Backend (/analyze)
+     ↓
+Security Scoring Engine
+     ↓
+Verdict + Score + Reasoning
+     ↓
+Displayed inside Gmail
+```
 
 ---
 
-# Setup Instructions
+# Technologies Used
 
-## 1. Create Virtual Environment
+## Backend
+
+* Python
+* FastAPI
+* Pydantic
+* Uvicorn
+
+## Frontend / Integration
+
+* Google Apps Script
+* Gmail Add-ons API
+
+## Development Tools
+
+* ngrok
+* Git
+* GitHub
+
+---
+
+# Verdict Levels
+
+| Score Range | Verdict    |
+| ----------- | ---------- |
+| 0 – 25      | SAFE       |
+| 26 – 60     | SUSPICIOUS |
+| 61 – 100    | MALICIOUS  |
+
+---
+
+# Example Malicious Indicators
+
+Examples of signals that increase the score:
+
+* “URGENT – Verify your password immediately”
+* Suspicious shortened links (`bit.ly`)
+* Fake PayPal / Amazon impersonation
+* Risky attachment references (`invoice.zip`, `update.exe`)
+* Typosquatted domains (`paypa1.com`)
+
+---
+
+# Running the Backend Locally
+
+## 1. Create virtual environment
 
 ```bash
 python -m venv venv
 ```
 
----
+## 2. Activate virtual environment
 
-## 2. Activate Virtual Environment
-
-Windows PowerShell:
+### Windows
 
 ```bash
 venv\Scripts\activate
 ```
 
----
-
-## 3. Install Dependencies
+## 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install fastapi uvicorn pydantic
 ```
 
----
-
-## 4. Start FastAPI Backend
+## 4. Run FastAPI server
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Expected:
-
-```bash
-Uvicorn running on http://127.0.0.1:8000
-```
-
 ---
 
-## 5. Start ngrok
+# Running ngrok
 
-In a second terminal:
+Expose the local backend publicly:
 
 ```bash
 ngrok http 8000
 ```
 
-Copy the generated HTTPS forwarding URL.
-
----
-
-## 6. Update Backend URL
-
-Inside Code.gs:
+Use the generated ngrok URL inside:
 
 ```javascript
 const BACKEND_URL = "https://YOUR-NGROK-URL/analyze";
 ```
-
-Replace the placeholder with the active ngrok URL.
-
----
-
-## 7. Deploy Gmail Add-on
-
-Inside Google Apps Script:
-
-1. Deploy
-2. Test deployments
-3. Install
-4. Approve Gmail permissions
-
----
-
-## 8. Test The Add-on
-
-1. Open Gmail
-2. Open any email
-3. Open the MailGuard Add-on from the Gmail sidebar
-4. Review the score, verdict, and explanation
-
----
-
-# Example Analysis Result
-
-```json
-{
-  "score": 78,
-  "verdict": "Malicious",
-  "signals": [
-    {
-      "name": "url_shortener",
-      "triggered": true,
-      "weight": 25,
-      "detail": "Email contains a shortened URL"
-    }
-  ]
-}
-```
-
----
-
-# Security Considerations
-
-The system treats all incoming email data as untrusted input.
-
-Implemented protections include:
-
-* Pydantic validation
-* HTML escaping before rendering Gmail cards
-* Controlled OAuth scopes
-* Structured backend separation
-* Graceful runtime error handling
-* Safe URL extraction
-
----
-
-# Design Decisions
-
-## Why FastAPI?
-
-FastAPI was chosen because it enables rapid backend development while maintaining clean API contracts, automatic validation, and strong readability.
-
----
-
-## Why Rule-Based Detection?
-
-A rule-based approach was selected because it provides:
-
-* Explainability
-* Deterministic behavior
-* Easier debugging
-* Fast prototyping
-* Better interview demonstration value
-
----
-
-## Why ngrok?
-
-ngrok was used to securely expose the local FastAPI backend during Gmail Add-on development and testing.
-
----
-
-# Limitations
-
-Current limitations include:
-
-* No machine-learning classification
-* No live threat-intelligence integration
-* No attachment sandboxing
-* Local development environment using ngrok
-* Rule-based scoring may produce false positives or false negatives
 
 ---
 
@@ -335,30 +233,23 @@ Current limitations include:
 
 Potential future enhancements:
 
-* Machine learning phishing classifier
-* Threat intelligence feeds
-* URL reputation APIs
-* Domain reputation analysis
-* Real-time phishing feeds
-* Attachment sandboxing
-* Cloud deployment (Cloud Run / AWS)
-* User feedback collection
-
----
-
-# Demo Flow
-
-1. Open Gmail
-2. Open a suspicious email
-3. Launch the MailGuard Add-on
-4. View the maliciousness score
-5. Review triggered security signals
-6. Explain backend architecture
-7. Discuss trade-offs and future improvements
+* SPF / DKIM / DMARC validation
+* Real attachment scanning
+* Domain reputation APIs
+* Machine learning classification
+* Persistent database
+* Threat intelligence integration
+* Cloud deployment (Google Cloud Run / AWS)
 
 ---
 
 # Author
 
 Joelle Meheshem
-Computer Science Student — University of Haifa
+
+Computer Science student passionate about:
+
+* Software Engineering
+* Cybersecurity
+* Backend Development
+* Real-world product building

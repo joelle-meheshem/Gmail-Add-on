@@ -23,4 +23,5 @@ class SignalResult(BaseModel):
 class AnalysisResult(BaseModel):
     score: int
     verdict: str
-    reasons: List[str]
+    signals: List[SignalResult]
+    explanation: str

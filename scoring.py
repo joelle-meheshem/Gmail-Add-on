@@ -85,7 +85,7 @@ def run_signals(email: EmailPayload):
     signals.append(SignalResult(
         name="urgency_language",
         triggered=urgency,
-        weight=min(len(urgency_hits) * 6, 25) if urgency else 0,
+        weight=min(len(urgency_hits) * 8, 25) if urgency else 0,
         detail="Urgency or social-engineering language detected." if urgency else ""
     ))
 
@@ -177,12 +177,30 @@ def run_signals(email: EmailPayload):
     impersonation_detected = False
     impersonated_brand = ""
 
+    all_link_domains = [extract_domain(link) for link in all_links]
+
     for brand, valid_domains in TRUSTED_BRANDS.items():
-        if brand in combined_lower:
-            if sender_domain and not any(sender_domain.endswith(d) for d in valid_domains):
-                impersonation_detected = True
-                impersonated_brand = brand
-                break
+        sender_mentions_brand = brand in sender_lower
+        subject_mentions_brand = brand in subject_lower
+
+        link_mentions_brand = any(
+            brand in domain for domain in all_link_domains if domain
+        )
+
+        email_claims_brand_identity = (
+            sender_mentions_brand or
+            subject_mentions_brand or
+            link_mentions_brand
+        )
+
+        sender_matches_brand = any(
+            sender_domain.endswith(domain) for domain in valid_domains
+        )
+
+        if email_claims_brand_identity and sender_domain and not sender_matches_brand:
+            impersonation_detected = True
+            impersonated_brand = brand
+            break
 
     signals.append(SignalResult(
         name="brand_impersonation",
@@ -192,7 +210,12 @@ def run_signals(email: EmailPayload):
     ))
 
     # 9. Risky attachment indicators
-    risky_attachment = any(ext in combined_lower for ext in RISKY_EXTENSIONS)
+    attachment_pattern = re.compile(
+        r"\b[a-zA-Z0-9_-]+(\.exe|\.zip|\.rar|\.js|\.bat|\.scr|\.docm|\.xlsm)\b",
+        re.IGNORECASE
+    )
+
+    risky_attachment = bool(attachment_pattern.search(combined_text))
 
     signals.append(SignalResult(
         name="risky_attachment",

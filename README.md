@@ -88,7 +88,7 @@ MailGuard/
 ├── appsscript.json    # Gmail Add-on manifest and permissions
 │
 ├── README.md
-└── assets/
+└── screen/
     ├── safe.png
     ├── suspicious.png
     └── malicious.png

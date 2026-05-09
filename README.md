@@ -240,16 +240,3 @@ Potential future enhancements:
 * Persistent database
 * Threat intelligence integration
 * Cloud deployment (Google Cloud Run / AWS)
-
----
-
-# Author
-
-Joelle Meheshem
-
-Computer Science student passionate about:
-
-* Software Engineering
-* Cybersecurity
-* Backend Development
-* Real-world product building
